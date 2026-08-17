@@ -138,6 +138,15 @@ static func format_time(seconds: float) -> String:
 	var total := int(seconds)
 	return "%d:%02d" % [total / 60, total % 60]
 
+## Wraps a screen's real content so it can't land under a notch, rounded
+## corner, or home indicator. Every screen adds one of these directly to
+## itself (after the full-rect background, which should stay edge-to-edge)
+## and parents its actual content root inside it instead of onto the screen
+## directly. See addons/godotx_safe_area - GodotxSafeArea already fills the
+## viewport and keeps its offsets synced to DisplayServer's safe area.
+static func safe_area_root() -> GodotxSafeArea:
+	return GodotxSafeArea.new()
+
 ## A full-rect MarginContainer with consistent screen edge padding - every
 ## non-game screen roots its content in one of these so nothing touches the
 ## viewport edge.

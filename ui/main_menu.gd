@@ -10,9 +10,12 @@ func _ready() -> void:
 	_add_decoration("🐾", -8, 0.1, Vector2(0.82, 0.12))
 	_add_decoration("🐾", 16, 0.1, Vector2(0.1, 0.82))
 
+	var safe_area := AppTheme.safe_area_root()
+	add_child(safe_area)
+
 	var root := CenterContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(root)
+	safe_area.add_child(root)
 
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", AppTheme.SPACING_LG)

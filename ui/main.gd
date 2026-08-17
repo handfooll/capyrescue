@@ -77,8 +77,11 @@ func _process(delta: float) -> void:
 func _build_chrome() -> void:
 	add_child(AppTheme.make_background())
 
+	var safe_area := AppTheme.safe_area_root()
+	add_child(safe_area)
+
 	var padded := AppTheme.padded_root(20)
-	add_child(padded)
+	safe_area.add_child(padded)
 
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", AppTheme.SPACING_MD)
