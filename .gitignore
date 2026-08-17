@@ -1,0 +1,20 @@
+# Archived Unity project - regenerable build/cache artifacts only.
+# Real Unity source (Assets/, ProjectSettings/, Packages/) is still tracked.
+archive/unity/Library/
+archive/unity/Temp/
+archive/unity/Logs/
+archive/unity/UserSettings/
+archive/unity/obj/
+archive/unity/*.csproj
+archive/unity/*.sln
+
+# Xcode (archived)
+archive/xcode/**/xcuserdata/
+archive/xcode/**/DerivedData/
+archive/xcode/**/*.xcuserstate
+
+# Godot 4+ local editor/import cache - never tracked.
+.godot/
+
+# macOS
+.DS_Store

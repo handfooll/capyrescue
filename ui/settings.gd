@@ -1,0 +1,106 @@
+extends Control
+
+## Music/SFX volume, haptics toggle, and a reset-progress action - all
+## reading and writing through the Settings/GameData autoloads so every
+## screen (and the next app launch) sees the same values.
+
+var _reset_confirm: ConfirmationDialog
+
+func _ready() -> void:
+	add_child(AppTheme.make_background())
+
+	var padded := AppTheme.padded_root()
+	add_child(padded)
+
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", AppTheme.SPACING_LG)
+	padded.add_child(root)
+
+	var top_bar := HBoxContainer.new()
+	top_bar.add_theme_constant_override("separation", AppTheme.SPACING_MD)
+	root.add_child(top_bar)
+	var back_button := AppTheme.ghost_button("←  Back", 16)
+	back_button.pressed.connect(_on_back_pressed)
+	top_bar.add_child(back_button)
+	var title := AppTheme.heading("⚙  Settings", 30, AppTheme.PRIMARY_DARK)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_bar.add_child(title)
+
+	var card := AppTheme.card(AppTheme.SURFACE, 20)
+	root.add_child(card)
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", AppTheme.SPACING_LG)
+	card.add_child(section)
+
+	section.add_child(_build_slider_row("🎵  Music Volume", Settings.music_volume, _on_music_volume_changed))
+	section.add_child(_build_slider_row("🔊  SFX Volume", Settings.sfx_volume, _on_sfx_volume_changed))
+	section.add_child(_build_haptics_row())
+
+	var reset_button := AppTheme.danger_button("Reset All Progress", 18)
+	reset_button.pressed.connect(_on_reset_pressed)
+	root.add_child(reset_button)
+
+	_reset_confirm = ConfirmationDialog.new()
+	_reset_confirm.title = "Reset progress?"
+	_reset_confirm.dialog_text = "This clears every difficulty's best score and time. This can't be undone."
+	_reset_confirm.confirmed.connect(_on_reset_confirmed)
+	add_child(_reset_confirm)
+
+func _build_slider_row(label_text: String, initial_value: float, on_changed: Callable) -> Control:
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", AppTheme.SPACING_SM)
+
+	var label := AppTheme.body_label(label_text, 18, AppTheme.TEXT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	row.add_child(label)
+
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.05
+	slider.value = initial_value
+	slider.custom_minimum_size.y = 28
+	slider.value_changed.connect(on_changed)
+	row.add_child(slider)
+
+	return row
+
+func _build_haptics_row() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", AppTheme.SPACING_MD)
+
+	var label := AppTheme.body_label("📳  Haptic Feedback", 18, AppTheme.TEXT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+
+	var toggle := CheckButton.new()
+	toggle.button_pressed = Settings.haptics_enabled
+	toggle.toggled.connect(_on_haptics_toggled)
+	row.add_child(toggle)
+
+	return row
+
+func _on_music_volume_changed(value: float) -> void:
+	Settings.set_music_volume(value)
+
+func _on_sfx_volume_changed(value: float) -> void:
+	Settings.set_sfx_volume(value)
+	Audio.play_ui_tap()
+
+func _on_haptics_toggled(pressed: bool) -> void:
+	Settings.set_haptics_enabled(pressed)
+	if pressed:
+		Audio.vibrate_if_enabled(20)
+
+func _on_reset_pressed() -> void:
+	Audio.play_ui_tap()
+	_reset_confirm.popup_centered()
+
+func _on_reset_confirmed() -> void:
+	GameData.reset_progress()
+	Audio.play_ui_tap()
+
+func _on_back_pressed() -> void:
+	Audio.play_ui_tap()
+	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
