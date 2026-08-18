@@ -147,6 +147,28 @@ static func format_time(seconds: float) -> String:
 static func safe_area_root() -> GodotxSafeArea:
 	return GodotxSafeArea.new()
 
+## Reserved space for a banner ad - standard mobile banner height (50px),
+## full width, clearly marked as a placeholder since no ad network is
+## integrated yet (see the project notes "Backend (Future Phase)": don't build
+## against a service until one's actually chosen). Add as the last child of
+## a screen's content, inside its safe_area_root() wrapper, so it sits above
+## the home indicator instead of under it.
+static func ad_placeholder() -> Control:
+	var box := AppTheme.card(BG_ALT, 12)
+	box.custom_minimum_size.y = 50
+	var style := box.get_theme_stylebox("panel") as StyleBoxFlat
+	style.set_content_margin_all(0)
+	style.border_color = TEXT_MUTED
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.shadow_size = 0
+
+	var label := body_label("Ad space", 14, TEXT_MUTED)
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(label)
+	return box
+
 ## A full-rect MarginContainer with consistent screen edge padding - every
 ## non-game screen roots its content in one of these so nothing touches the
 ## viewport edge.

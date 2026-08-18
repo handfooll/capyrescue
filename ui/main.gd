@@ -144,6 +144,8 @@ func _build_chrome() -> void:
 	_new_puzzle_button.pressed.connect(func() -> void: new_puzzle(current_size))
 	button_row.add_child(_new_puzzle_button)
 
+	root.add_child(AppTheme.ad_placeholder())
+
 	_build_overlay()
 	add_child(_overlay)
 
