@@ -17,6 +17,7 @@ run/main_scene="res://ui/main_menu.tscn"
 
 [autoload]
 
+Fonts="*res://autoload/font_manager.gd"
 Settings="*res://autoload/settings_manager.gd"
 GameData="*res://autoload/game_data.gd"
 Audio="*res://autoload/audio_manager.gd"
@@ -29,7 +30,7 @@ window/size/window_width_override=390
 window/size/window_height_override=844
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
-window/handheld/orientation="portrait"
+window/handheld/orientation=1
 
 [editor_plugins]
 

@@ -15,7 +15,7 @@ const DEFAULT_SIZE := 6
 # until this much time has passed with no second click - Godot delivers
 # double-clicks as two separate press events (the second flagged
 # `double_click = true`), it does not suppress the first on its own.
-const TAP_DISAMBIGUATION_SECONDS := 0.3
+const TAP_DISAMBIGUATION_SECONDS := 0.18
 
 const REGION_COLORS: Array[Color] = [
 	Color(0.97, 0.51, 0.51),
@@ -40,6 +40,8 @@ var mistakes: int = 0
 var is_game_over: bool = false
 
 var _cell_buttons: Dictionary = {} # Vector2i -> Button
+var _cell_cats: Dictionary = {} # Vector2i -> Label
+var _cell_marks: Dictionary = {} # Vector2i -> Control (ui/x_mark.gd)
 var _single_tap_timer: Timer
 var _pending_single_tap_position: Vector2i = Vector2i(-1, -1)
 
@@ -212,6 +214,8 @@ func _rebuild_grid() -> void:
 	for child in _board_grid.get_children():
 		child.queue_free()
 	_cell_buttons.clear()
+	_cell_cats.clear()
+	_cell_marks.clear()
 	_board_grid.columns = current_size
 	for row in current_size:
 		for col in current_size:
@@ -222,6 +226,26 @@ func _rebuild_grid() -> void:
 			button.gui_input.connect(_on_cell_gui_input.bind(position))
 			_board_grid.add_child(button)
 			_cell_buttons[position] = button
+
+			# Cat glyph and X mark are separate overlay nodes (not the
+			# button's own .text) so a placement can be pop-animated without
+			# scaling the tile's background/border along with it.
+			var cat_label := Label.new()
+			cat_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+			cat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			cat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			cat_label.add_theme_font_size_override("font_size", 26)
+			cat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			button.add_child(cat_label)
+			_cell_cats[position] = cat_label
+
+			var mark := Control.new()
+			mark.set_script(load("res://ui/x_mark.gd"))
+			mark.set_anchors_preset(Control.PRESET_FULL_RECT)
+			mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			mark.visible = false
+			button.add_child(mark)
+			_cell_marks[position] = mark
 
 func _on_cell_gui_input(event: InputEvent, position: Vector2i) -> void:
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
@@ -236,20 +260,36 @@ func _on_cell_gui_input(event: InputEvent, position: Vector2i) -> void:
 func _on_single_tap_timer_timeout() -> void:
 	_handle_single_tap(_pending_single_tap_position)
 
+## Pops a newly-placed cat/mark in from nothing - only called for an actual
+## new placement, not for removals or unrelated refreshes, so already-placed
+## glyphs don't keep re-animating every time some other cell changes.
+func _pop_animate(node: Control) -> void:
+	node.pivot_offset = node.size / 2.0
+	node.scale = Vector2(0.2, 0.2)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, "scale", Vector2.ONE, 0.2)
+
 ## Single tap: toggle an X mark. Tapping a cat marks it instead of clearing
 ## it outright, since a mark means "decided this isn't a cat".
 func _handle_single_tap(position: Vector2i) -> void:
 	if is_solved or is_game_over:
 		return
+	var placed_mark := false
 	if board.has_cat(position):
 		board.remove_cat(position)
 		marked_cells[position] = true
+		placed_mark = true
 	elif marked_cells.has(position):
 		marked_cells.erase(position)
 	else:
 		marked_cells[position] = true
+		placed_mark = true
 	Audio.play_mark()
 	_on_board_changed()
+	if placed_mark:
+		_pop_animate(_cell_marks[position])
 
 ## Double tap: toggle a cat directly, clearing any mark on the way in. A
 ## placement that conflicts with another cat (same row/column/region, or
@@ -257,12 +297,14 @@ func _handle_single_tap(position: Vector2i) -> void:
 func _handle_double_tap(position: Vector2i) -> void:
 	if is_solved or is_game_over:
 		return
+	var placed_cat := false
 	if board.has_cat(position):
 		board.remove_cat(position)
 		Audio.play_mark()
 	else:
 		marked_cells.erase(position)
 		board.place_cat(position)
+		placed_cat = true
 		if MoveValidator.is_legal(position, board):
 			Audio.play_place()
 			Audio.vibrate_if_enabled(15)
@@ -273,6 +315,8 @@ func _handle_double_tap(position: Vector2i) -> void:
 			_refresh_mistakes_label()
 			_refresh_lives()
 	_on_board_changed()
+	if placed_cat:
+		_pop_animate(_cell_cats[position])
 	if not is_solved and _lives_remaining() <= 0:
 		_trigger_game_over()
 
@@ -294,6 +338,7 @@ func request_hint() -> void:
 	marked_cells.erase(position)
 	board.place_cat(position)
 	_on_board_changed()
+	_pop_animate(_cell_cats[position])
 
 func _lives_remaining() -> int:
 	return maxi(0, GameData.STARTING_LIVES - mistakes)
@@ -414,10 +459,15 @@ func _refresh_cell(position: Vector2i) -> void:
 	button.add_theme_stylebox_override("pressed", style)
 	button.add_theme_stylebox_override("focus", style)
 
+	var cat_label: Label = _cell_cats[position]
+	var mark: Control = _cell_marks[position]
 	if board.has_cat(position):
-		button.text = "🐱"
+		cat_label.text = "🐱"
+		mark.visible = false
 	elif marked_cells.has(position):
-		button.text = "✕" # ✕
-		button.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+		cat_label.text = ""
+		mark.visible = true
+		mark.queue_redraw()
 	else:
-		button.text = ""
+		cat_label.text = ""
+		mark.visible = false
