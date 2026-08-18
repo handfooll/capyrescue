@@ -16,5 +16,9 @@ archive/xcode/**/*.xcuserstate
 # Godot 4+ local editor/import cache - never tracked.
 .godot/
 
+# Generated iOS Xcode project - regenerated via
+# `godot --headless --export-debug "iOS" build/ios/Meowdoku`, not source.
+build/
+
 # macOS
 .DS_Store

@@ -12,6 +12,7 @@ config_version=5
 
 config/name="Meowdoku"
 config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://icon.png"
 run/main_scene="res://ui/main_menu.tscn"
 
 [autoload]
@@ -37,3 +38,4 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg", "res://addons/godotx_sa
 [rendering]
 
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
