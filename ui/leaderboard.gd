@@ -33,6 +33,7 @@ func _ready() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(scroll)
 
 	var list := VBoxContainer.new()
@@ -76,6 +77,8 @@ func _build_row(size: int) -> Control:
 	var win_rate := int(round(100.0 * best.wins / best.games_played))
 	var detail_label := AppTheme.body_label("Best time %s   •   %d/%d wins (%d%%)" % [best_time_text, best.wins, best.games_played, win_rate], 14)
 	detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stats.add_child(detail_label)
 
 	return card

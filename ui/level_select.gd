@@ -29,6 +29,7 @@ func _ready() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(scroll)
 
 	var list := VBoxContainer.new()
@@ -64,6 +65,8 @@ func _build_level_card(size: int) -> Control:
 		stats_text = "Best score %d   •   Best time %s   •   %d games" % [best.best_score, best_time_text, best.games_played]
 	var stats_label := AppTheme.body_label(stats_text, 14)
 	stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	stats_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_child(stats_label)
 
 	var play_button := AppTheme.primary_button("Play", 18)

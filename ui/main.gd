@@ -95,23 +95,17 @@ func _build_chrome() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	top_bar.add_child(back_button)
 
-	_difficulty_label = AppTheme.heading("", 22, AppTheme.PRIMARY_DARK)
+	_difficulty_label = AppTheme.heading("", 20, AppTheme.PRIMARY_DARK)
 	_difficulty_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_difficulty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	top_bar.add_child(_difficulty_label)
 
-	var lives_row := HBoxContainer.new()
-	lives_row.add_theme_constant_override("separation", 2)
-	top_bar.add_child(lives_row)
-	for i in GameData.STARTING_LIVES:
-		var paw := Label.new()
-		paw.text = "🐾"
-		paw.add_theme_font_size_override("font_size", 24)
-		lives_row.add_child(paw)
-		_life_icons.append(paw)
-
+	# Lives live on the stats row (with timer/mistakes), not the top bar -
+	# at phone width there isn't room next to "← Menu" and the difficulty
+	# name for a 3rd cluster without overflowing the screen edge.
 	var stats_row := HBoxContainer.new()
 	stats_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats_row.add_theme_constant_override("separation", AppTheme.SPACING_LG)
+	stats_row.add_theme_constant_override("separation", AppTheme.SPACING_MD)
 	root.add_child(stats_row)
 
 	_timer_label = AppTheme.heading("0:00", 18, AppTheme.TEXT)
@@ -119,6 +113,16 @@ func _build_chrome() -> void:
 
 	_mistakes_label = AppTheme.heading("", 18, AppTheme.TEXT_MUTED)
 	stats_row.add_child(_mistakes_label)
+
+	var lives_row := HBoxContainer.new()
+	lives_row.add_theme_constant_override("separation", 2)
+	stats_row.add_child(lives_row)
+	for i in GameData.STARTING_LIVES:
+		var paw := Label.new()
+		paw.text = "🐾"
+		paw.add_theme_font_size_override("font_size", 20)
+		lives_row.add_child(paw)
+		_life_icons.append(paw)
 
 	var grid_wrap := CenterContainer.new()
 	grid_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
