@@ -6,12 +6,12 @@ extends Control
 ## leaderboard.
 
 func _ready() -> void:
-	add_child(AppTheme.make_background())
+	add_child(AppTheme.art_background())
 
 	var safe_area := AppTheme.safe_area_root()
 	add_child(safe_area)
 
-	var padded := AppTheme.padded_root()
+	var padded := AppTheme.screen_root(safe_area)
 	safe_area.add_child(padded)
 
 	var root := VBoxContainer.new()
@@ -24,11 +24,12 @@ func _ready() -> void:
 	var back_button := AppTheme.ghost_button("←  Back", 16)
 	back_button.pressed.connect(_on_back_pressed)
 	top_bar.add_child(back_button)
-	var title := AppTheme.heading("🏆  Leaderboard", 30, AppTheme.PRIMARY_DARK)
+	var title := AppTheme.heading("🏆  Leaderboard", 30, AppTheme.ACCENT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(title)
 
-	var subtitle := AppTheme.body_label("your personal bests, saved on this device", 14)
+	# TEXT, not the default muted tan - this line sits on the painted sky now.
+	var subtitle := AppTheme.body_label("your personal bests, saved on this device", 14, AppTheme.TEXT)
 	root.add_child(subtitle)
 
 	var scroll := ScrollContainer.new()
@@ -69,7 +70,7 @@ func _build_row(size: int) -> Control:
 	stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(stats)
 
-	var score_label := AppTheme.heading("Best score: %d" % best.best_score, 18, AppTheme.SECONDARY_DARK)
+	var score_label := AppTheme.heading("Best score: %d" % best.best_score, 18, AppTheme.ACCENT)
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	stats.add_child(score_label)
 

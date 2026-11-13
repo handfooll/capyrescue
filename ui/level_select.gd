@@ -3,14 +3,20 @@ extends Control
 ## Difficulty picker: one card per board size, each showing that
 ## difficulty's local best time/score, and a Play button that hands the
 ## chosen size to the game screen via GameData.pending_size.
+##
+## Superseded and currently unreachable - nothing navigates here. The picker
+## itself now lives in Settings and in the in-game pause card
+## (AppTheme.difficulty_picker), which is where the choice is actually made;
+## this screen is kept only because it also surfaces per-tier stats, and is
+## safe to delete once nothing wants that view.
 
 func _ready() -> void:
-	add_child(AppTheme.make_background())
+	add_child(AppTheme.art_background())
 
 	var safe_area := AppTheme.safe_area_root()
 	add_child(safe_area)
 
-	var padded := AppTheme.padded_root()
+	var padded := AppTheme.screen_root(safe_area)
 	safe_area.add_child(padded)
 
 	var root := VBoxContainer.new()
@@ -23,7 +29,7 @@ func _ready() -> void:
 	var back_button := AppTheme.ghost_button("←  Back", 16)
 	back_button.pressed.connect(_on_back_pressed)
 	top_bar.add_child(back_button)
-	var title := AppTheme.heading("Choose a Level", 30, AppTheme.PRIMARY_DARK)
+	var title := AppTheme.heading("Choose a Level", 30, AppTheme.ACCENT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(title)
 
@@ -78,7 +84,7 @@ func _build_level_card(size: int) -> Control:
 
 func _on_play_pressed(size: int) -> void:
 	Audio.play_ui_tap()
-	GameData.pending_size = size
+	GameData.set_pending_size(size)
 	get_tree().change_scene_to_file("res://ui/main.tscn")
 
 func _on_back_pressed() -> void:

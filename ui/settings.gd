@@ -1,18 +1,23 @@
 extends Control
 
-## Music/SFX volume, haptics toggle, and a reset-progress action - all
-## reading and writing through the Settings/GameData autoloads so every
+## Difficulty, music/SFX volume, haptics toggle, and a reset-progress action -
+## all reading and writing through the Settings/GameData autoloads so every
 ## screen (and the next app launch) sees the same values.
+##
+## The difficulty picker lives here because the main menu's Play goes straight
+## into a game: res://ui/level_select.tscn was the only thing that ever set the
+## tier, and nothing navigated to it, so the choice was unreachable.
 
 var _reset_confirm: ConfirmationDialog
+var _difficulty_picker: GridContainer
 
 func _ready() -> void:
-	add_child(AppTheme.make_background())
+	add_child(AppTheme.art_background())
 
 	var safe_area := AppTheme.safe_area_root()
 	add_child(safe_area)
 
-	var padded := AppTheme.padded_root()
+	var padded := AppTheme.screen_root(safe_area)
 	safe_area.add_child(padded)
 
 	var root := VBoxContainer.new()
@@ -25,9 +30,26 @@ func _ready() -> void:
 	var back_button := AppTheme.ghost_button("←  Back", 16)
 	back_button.pressed.connect(_on_back_pressed)
 	top_bar.add_child(back_button)
-	var title := AppTheme.heading("⚙  Settings", 30, AppTheme.PRIMARY_DARK)
+	var title := AppTheme.heading("⚙  Settings", 30, AppTheme.ACCENT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(title)
+
+	var difficulty_card := AppTheme.card(AppTheme.SURFACE, 20)
+	root.add_child(difficulty_card)
+	var difficulty_section := VBoxContainer.new()
+	difficulty_section.add_theme_constant_override("separation", AppTheme.SPACING_SM)
+	difficulty_card.add_child(difficulty_section)
+
+	var difficulty_label := AppTheme.body_label("Difficulty", 18, AppTheme.TEXT)
+	difficulty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	difficulty_section.add_child(difficulty_label)
+
+	var difficulty_hint := AppTheme.body_label("bigger board, bigger score", 14)
+	difficulty_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	difficulty_section.add_child(difficulty_hint)
+
+	_difficulty_picker = AppTheme.difficulty_picker(GameData.pending_size, _on_difficulty_picked)
+	difficulty_section.add_child(_difficulty_picker)
 
 	var card := AppTheme.card(AppTheme.SURFACE, 20)
 	root.add_child(card)
@@ -63,6 +85,7 @@ func _build_slider_row(label_text: String, initial_value: float, on_changed: Cal
 	slider.step = 0.05
 	slider.value = initial_value
 	slider.custom_minimum_size.y = 28
+	AppTheme.style_slider(slider)
 	slider.value_changed.connect(on_changed)
 	row.add_child(slider)
 
@@ -83,6 +106,11 @@ func _build_haptics_row() -> Control:
 	row.add_child(toggle)
 
 	return row
+
+func _on_difficulty_picked(size: int) -> void:
+	Audio.play_ui_tap()
+	GameData.set_pending_size(size)
+	AppTheme.refresh_difficulty_picker(_difficulty_picker, size)
 
 func _on_music_volume_changed(value: float) -> void:
 	Settings.set_music_volume(value)

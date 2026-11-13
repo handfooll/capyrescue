@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Meowdoku"
+config/name="CapyRescue"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.png"
 run/main_scene="res://ui/main_menu.tscn"

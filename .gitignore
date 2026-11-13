@@ -16,8 +16,9 @@ archive/xcode/**/*.xcuserstate
 # Godot 4+ local editor/import cache - never tracked.
 .godot/
 
-# Generated iOS Xcode project - regenerated via
-# `godot --headless --export-debug "iOS" build/ios/Meowdoku`, not source.
+# Generated iOS Xcode project - 429 MB of engine static libs, regenerated via
+# `godot --headless --export-debug "iOS"` (the preset's own export_path).
+# Never source.
 build/
 
 # macOS

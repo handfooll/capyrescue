@@ -86,16 +86,44 @@ func _refresh_safe_area(force: bool = false) -> void:
 	if set_from_safe_area == SetFromSafeAreaMode.OFF and not force:
 		return
 
-	var window_size := DisplayServer.window_get_size()
-	var window_rect := Rect2(Vector2.ZERO, window_size)
+	var insets := _display_insets()
+	_apply_offsets([
+		max(left, insets[0]),
+		max(top, insets[1]),
+		max(right, insets[2]),
+		max(bottom, insets[3]),
+	])
+
+
+# LOCAL PATCH (not upstream). The device insets, converted out of the display
+# server's physical pixels into the stretched canvas the UI is actually laid
+# out in. Two things the original computation got wrong, neither visible until
+# you compare a phone against the editor:
+#
+#  * `get_display_safe_area()` is only a real inset on mobile. On desktop it is
+#    the *screen's* work area in *screen* coordinates - on macOS that's
+#    y = 66 for the menu bar - which has nothing to do with where a 390x844
+#    window sits, so every screen picked up a phantom 66pt top margin.
+#  * Both it and `window_get_size()` are in physical pixels, while the offsets
+#    below are applied in canvas units. With `stretch/mode = canvas_items`
+#    mapping a 390x844 canvas onto a 3x phone, a 59pt notch came back as ~177
+#    canvas units and pushed the whole UI about a fifth of the screen too low.
+func _display_insets() -> Array[int]:
+	if not OS.has_feature("mobile"):
+		return [0, 0, 0, 0]
+
+	var window_size := Vector2(DisplayServer.window_get_size())
+	if window_size.x <= 0.0 or window_size.y <= 0.0:
+		return [0, 0, 0, 0]
+
+	var to_canvas := get_viewport().get_visible_rect().size / window_size
 	var safe_rect := Rect2(DisplayServer.get_display_safe_area())
-
-	var new_left := max(left, int(safe_rect.position.x - window_rect.position.x))
-	var new_top := max(top, int(safe_rect.position.y - window_rect.position.y))
-	var new_right := max(right, int(window_rect.end.x - safe_rect.end.x))
-	var new_bottom := max(bottom, int(window_rect.end.y - safe_rect.end.y))
-
-	_apply_offsets([new_left, new_top, new_right, new_bottom])
+	return [
+		int(maxf(0.0, safe_rect.position.x) * to_canvas.x),
+		int(maxf(0.0, safe_rect.position.y) * to_canvas.y),
+		int(maxf(0.0, window_size.x - safe_rect.end.x) * to_canvas.x),
+		int(maxf(0.0, window_size.y - safe_rect.end.y) * to_canvas.y),
+	]
 
 
 # apply final margins to the control
